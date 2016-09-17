@@ -78,7 +78,7 @@ bool ParseSteam2SteamID(const char *steamIDString, CSteamID &steamID) {
         return false;
     }
 
-    uint32_t accountID = (strtoull(steamIDParts[3].str().c_str(), NULL, 10) * 2) + strtoul(steamIDParts[2].str().c_str(), NULL, 10);
+    uint32_t accountID = (strtoul(steamIDParts[3].str().c_str(), NULL, 10) * 2) + strtoul(steamIDParts[2].str().c_str(), NULL, 10);
     EUniverse universe = (EUniverse) strtoul(steamIDParts[1].str().c_str(), NULL, 10);
     if (universe == k_EUniverseInvalid) {
         universe = k_EUniversePublic;
@@ -138,7 +138,7 @@ inline void GetSteamIDParts(std::cmatch steamIDParts, uint32_t &accountID, uint3
     }
 
     universe = (EUniverse) strtoul(steamIDParts[2].str().c_str(), NULL, 10);
-    accountID = strtoull(steamIDParts[3].str().c_str(), NULL, 10);
+    accountID = strtoul(steamIDParts[3].str().c_str(), NULL, 10);
 }
 
 bool ParseSteam3SteamID(const char *steamIDString, CSteamID &steamID) {
