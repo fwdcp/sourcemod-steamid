@@ -58,7 +58,7 @@ template <typename T> constexpr size_t NumericStringMaxLength() {
 bool Parse64BitSteamID(const char *steamIDString, CSteamID &steamID) {
     static std::regex steamIDRegex = std::regex("(\\d+)", std::regex::optimize);
 
-    std::match_results steamIDParts;
+    std::cmatch steamIDParts;
 
     if (!std::regex_match(steamIDString, steamIDParts, steamIDRegex)) {
         return false;
@@ -72,7 +72,7 @@ bool Parse64BitSteamID(const char *steamIDString, CSteamID &steamID) {
 bool ParseSteam2SteamID(const char *steamIDString, CSteamID &steamID) {
     static std::regex steamIDRegex = std::regex("STEAM_(\\d):(\\d):(\\d+)", std::regex::optimize);
 
-    std::match_results steamIDParts;
+    std::cmatch steamIDParts;
 
     if (!std::regex_match(steamIDString, steamIDParts, steamIDRegex)) {
         return false;
@@ -89,7 +89,7 @@ bool ParseSteam2SteamID(const char *steamIDString, CSteamID &steamID) {
     return true;
 }
 
-inline void GetSteamIDParts(std::match_results steamIDParts, uint32_t &accountID, uint32_t &instance, EUniverse &universe, EAccountType &accountType) {
+inline void GetSteamIDParts(std::cmatch steamIDParts, uint32_t &accountID, uint32_t &instance, EUniverse &universe, EAccountType &accountType) {
     accountType = k_EAccountTypeInvalid;
     instance = 0;
 
@@ -145,7 +145,7 @@ bool ParseSteam3SteamID(const char *steamIDString, CSteamID &steamID) {
     static std::regex steamIDMainRegex = std::regex("\\[([a-zA-Z]):(\\d):(\\d+)\\]", std::regex::optimize);
     static std::regex steamIDSecondaryRegex = std::regex("\\[([a-zA-Z]):(\\d):(\\d+):(\\d+)\\]", std::regex::optimize);
 
-    std::match_results steamIDParts;
+    std::cmatch steamIDParts;
 
     uint32_t accountID;
     uint32_t instance;
@@ -153,7 +153,7 @@ bool ParseSteam3SteamID(const char *steamIDString, CSteamID &steamID) {
     EAccountType accountType;
 
     if (std::regex_match(steamIDString, steamIDParts, steamIDMainRegex)) {
-        GetSteamIDParts(accountID, instance, universe, accountType);
+        GetSteamIDParts(steamIDParts, accountID, instance, universe, accountType);
 
         if (accountType == k_EAccountTypeChat) {
             steamID.Set(accountID, universe, accountType);
@@ -165,7 +165,7 @@ bool ParseSteam3SteamID(const char *steamIDString, CSteamID &steamID) {
         return true;
     }
     else if (std::regex_match(steamIDString, steamIDParts, steamIDSecondaryRegex)) {
-        GetSteamIDParts(accountID, instance, universe, accountType);
+        GetSteamIDParts(steamIDParts, accountID, instance, universe, accountType);
 
         instance |= strtoul(steamIDParts[4].str(), NULL, 10);
 
@@ -178,15 +178,15 @@ bool ParseSteam3SteamID(const char *steamIDString, CSteamID &steamID) {
     }
 }
 
-void Render64BitSteamID(const CSteamID &steamID, char steamIDString[]) {
-	V_snprintf(steamIDString, sizeof(steamIDString), "%" PRIu64, steamID.ConvertToUint64());
+void Render64BitSteamID(const CSteamID &steamID, char steamIDString[], size_t steamIDStringSize) {
+	V_snprintf(steamIDString, steamIDStringSize, "%" PRIu64, steamID.ConvertToUint64());
 }
 
-void RenderSteam2SteamID(const CSteamID &steamID, char steamIDString[]) {
-	V_snprintf(steamIDString, sizeof(steamIDString), "STEAM_0:%" PRIu8 ":%" PRIu32, steamID.GetAccountID() % 2, steamID.GetAccountID() / 2);
+void RenderSteam2SteamID(const CSteamID &steamID, char steamIDString[], size_t steamIDStringSize) {
+	V_snprintf(steamIDString, steamIDStringSize, "STEAM_0:%" PRIu8 ":%" PRIu32, steamID.GetAccountID() % 2, steamID.GetAccountID() / 2);
 }
 
-void RenderSteam3SteamID(const CSteamID &steamID, char steamIDString[]) {
+void RenderSteam3SteamID(const CSteamID &steamID, char steamIDString[], size_t steamIDStringSize) {
     char accountType = 'I';
 
     switch (steamID.GetEAccountType()) {
@@ -236,10 +236,10 @@ void RenderSteam3SteamID(const CSteamID &steamID, char steamIDString[]) {
     }
 
     if ((steamID.GetEAccountType() == k_EAccountTypeIndividual && steamID.GetUnAccountInstance() != k_unSteamUserDesktopInstance) || steamID.GetEAccountType() == k_EAccountTypeMultiseat || steamID.GetEAccountType() == k_EAccountTypeAnonGameServer) {
-        V_snprintf(steamIDString, sizeof(steamIDString), "[%c:%" PRIu8 ":%" PRIu32 ":%" PRIu32 "]", accountType, steamID.GetEUniverse(), steamID.GetAccountID(), steamID.GetUnAccountInstance());
+        V_snprintf(steamIDString, steamIDStringSize, "[%c:%" PRIu8 ":%" PRIu32 ":%" PRIu32 "]", accountType, steamID.GetEUniverse(), steamID.GetAccountID(), steamID.GetUnAccountInstance());
     }
     else {
-        V_snprintf(steamIDString, sizeof(steamIDString), "[%c:%" PRIu8 ":%" PRIu32 "]", accountType, steamID.GetEUniverse(), steamID.GetAccountID());
+        V_snprintf(steamIDString, steamIDStringSize, "[%c:%" PRIu8 ":%" PRIu32 "]", accountType, steamID.GetEUniverse(), steamID.GetAccountID());
     }
 }
 
@@ -272,13 +272,13 @@ cell_t Native_Convert(IPluginContext *pContext, const cell_t *params) {
     char destination[128];
 
     if (params[3] == STEAMID_STEAM2) {
-        RenderSteam2SteamID(steamID, destination);
+        RenderSteam2SteamID(steamID, destination, sizeof(destination));
     }
     else if (params[3] == STEAMID_STEAM3) {
-        RenderSteam3SteamID(steamID, destination);
+        RenderSteam3SteamID(steamID, destination, sizeof(destination));
     }
     else if (params[3] == STEAMID_STEAM64) {
-        Render64BitSteamID(steamID, destination);
+        Render64BitSteamID(steamID, destination, sizeof(destination));
     }
     else {
         return false;

@@ -43,7 +43,7 @@
 /**
  * @brief Implementation of Steam ID.
  */
-class Connect : public SDKExtension
+class SteamID : public SDKExtension
 {
 public:
 	/**
