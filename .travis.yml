@@ -1,14 +1,18 @@
 language: cpp
 compiler:
-- clang
+- g++
 
 addons:
   apt:
+    sources:
+    - ubuntu-toolchain-r-test
     packages:
-    - g++-multilib
+    - g++-5
+    - g++-5-multilib
     - lib32z1-dev
 
 install:
+- export CC=gcc-5; export CXX=g++-5
 - git clone https://github.com/alliedmodders/ambuild.git $TRAVIS_BUILD_DIR/../ambuild
   && cd $TRAVIS_BUILD_DIR/../ambuild && python setup.py build && sudo python setup.py
   install
