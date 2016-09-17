@@ -5,10 +5,11 @@ compiler:
 addons:
   apt:
     sources:
-    - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise
     packages:
     - g++-5
     - g++-5-multilib
+    - g++-multilib
     - lib32z1-dev
 
 install:
